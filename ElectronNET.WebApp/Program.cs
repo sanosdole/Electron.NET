@@ -1,4 +1,6 @@
-﻿using ElectronNET.API;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using ElectronNET.API;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
@@ -7,16 +9,19 @@ namespace ElectronNET.WebApp
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            using (var cts = new CancellationTokenSource())
+            {
+                await CreateWebHostBuilder(args, cts).Build().RunAsync(cts.Token);
+            }
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args, CancellationTokenSource cts)
         {
             return WebHost.CreateDefaultBuilder(args)
                 .ConfigureLogging((hostingContext, logging) => { logging.AddConsole(); })
-                .UseElectron(args)
+                .UseElectron(args, cts)
                 .UseStartup<Startup>();
         }
     }

@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
+using NodeHostEnvironment;
 
 namespace ElectronNET.API
 {
@@ -15,9 +17,11 @@ namespace ElectronNET.API
         /// </summary>
         /// <param name="builder">The builder.</param>
         /// <param name="args">The arguments.</param>
+        /// <param name="cts">Source for stopping the web app from electron</param>
         /// <returns></returns>
-        public static IWebHostBuilder UseElectron(this IWebHostBuilder builder, string[] args)
+        public static IWebHostBuilder UseElectron(this IWebHostBuilder builder, string[] args, CancellationTokenSource cts)
         {
+            NodeHost.Instance.Global.stopCoreApp = new Action(() => cts.Cancel());
             foreach (string argument in args)
             {
                 if (argument.ToUpper().Contains("ELECTRONPORT"))

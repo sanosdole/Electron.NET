@@ -23,14 +23,14 @@ dotnet tool uninstall ElectronNET.CLI -g
 dotnet tool install ElectronNET.CLI -g
 
 echo "/target xxx (dev-build)"
-electronize build /target custom win7-x86;win /dotnet-configuration Debug /electron-arch ia32  /electron-params "--publish never"
+:: %USERPROFILE%\.dotnet\tools\electronize build /target custom win7-x86;win /dotnet-configuration Debug /electron-arch ia32  /electron-params "--publish never"
 
 echo "/target win (dev-build)"
-electronize build /target win /electron-params "--publish never"
+:: %USERPROFILE%\.dotnet\tools\electronize build /target win /electron-params "--publish never"
 
 echo "/target custom win7-x86;win (dev-build)"
 
-electronize build /target custom win7-x86;win /electron-params "--publish never"
+:: %USERPROFILE%\.dotnet\tools\electronize build /target custom win7-x86;win /electron-params "--publish never"
 
 :: Be aware, that for non-electronnet-dev environments the correct 
 :: invoke command would be dotnet electronize ...

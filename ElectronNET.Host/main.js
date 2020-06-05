@@ -1,10 +1,11 @@
 ﻿const { app } = require('electron');
 const { BrowserWindow } = require('electron');
 const path = require('path');
-const cProcess = require('child_process').spawn;
+//const cProcess = require('child_process').spawn;
+const { runCoreApp } = require('coreclr-hosting');
 const portscanner = require('portscanner');
 const imageSize = require('image-size');
-let io, server, browserWindows, ipc, apiProcess, loadURL;
+let io, server, browserWindows, ipc, coreAppResultPromise, loadURL;
 let appApi, menu, dialogApi, notification, tray, webContents;
 let globalShortcut, shellApi, screen, clipboard, autoUpdater;
 let commandLine, browserView;
@@ -62,9 +63,14 @@ app.on('ready', () => {
 
 });
 
+global.stopCoreApp = function() {
+    throw new Error("stopCoreApp has not been set by the implementation! Please call `UseElectron` in your application.");
+}
+
 app.on('quit', async (event, exitCode) => {
     await server.close();
-    apiProcess.kill();
+    global.stopCoreApp();    
+    await coreAppResultPromise;
 });
 
 function isSplashScreenEnabled() {
@@ -220,48 +226,18 @@ function startAspCoreBackend(electronPort) {
         console.log('ASP.NET Core Port: ' + aspCoreBackendPort);
         loadURL = `http://localhost:${aspCoreBackendPort}`;
         const parameters = [getEnvironmentParameter(), `/electronPort=${electronPort}`, `/electronWebPort=${aspCoreBackendPort}`];
-        let binaryFile = manifestJsonFile.executable;
+        let binaryFile = manifestJsonFile.executable + '.dll';
 
-        const os = require('os');
-        if (os.platform() === 'win32') {
-            binaryFile = binaryFile + '.exe';
-        }
-
+        
         let binFilePath = path.join(currentBinPath, binaryFile);
-        var options = { cwd: currentBinPath };
-        apiProcess = cProcess(binFilePath, parameters, options);
-
-        apiProcess.stdout.on('data', (data) => {
-            console.log(`stdout: ${data.toString()}`);
-        });
+        
+        process.chdir(currentBinPath); // TODO DM 05.06.2020: is this necessary?
+        coreAppResultPromise = runCoreApp(binFilePath, ...parameters);        
     }
 }
 
 function startAspCoreBackendWithWatch(electronPort) {
-    if (manifestJsonFile.aspCoreBackendPort) {
-        startBackend(manifestJsonFile.aspCoreBackendPort)
-    } else {
-        // hostname needs to be localhost, otherwise Windows Firewall will be triggered.
-        portscanner.findAPortNotInUse(electronPort + 1, 65535, 'localhost', function (error, electronWebPort) {
-            startBackend(electronWebPort);
-        });
-    }
-
-    function startBackend(aspCoreBackendPort) {
-        console.log('ASP.NET Core Watch Port: ' + aspCoreBackendPort);
-        loadURL = `http://localhost:${aspCoreBackendPort}`;
-        const parameters = ['watch', 'run', getEnvironmentParameter(), `/electronPort=${electronPort}`, `/electronWebPort=${aspCoreBackendPort}`];
-
-        var options = {
-            cwd: currentBinPath,
-            env: process.env,
-        };
-        apiProcess = cProcess('dotnet', parameters, options);
-
-        apiProcess.stdout.on('data', (data) => {
-            console.log(`stdout: ${data.toString()}`);
-        });
-    }
+    throw Error("Watch is not supported when hosting the .NET runtime in process. Consider switching to electron-reload for this!");
 }
 
 function getEnvironmentParameter() {
