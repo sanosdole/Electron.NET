@@ -11,12 +11,6 @@
         /// <value>
         ///   <c>true</c> if this instance is electron active; otherwise, <c>false</c>.
         /// </value>
-        public static bool IsElectronActive
-        {
-            get
-            {
-                return !string.IsNullOrEmpty(BridgeSettings.SocketPort);
-            }
-        }
+        public static bool IsElectronActive { get; internal set; }
     }
 }

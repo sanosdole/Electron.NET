@@ -11,9 +11,12 @@ namespace ElectronNET.WebApp
     {
         public static async Task Main(string[] args)
         {
-            using (var cts = new CancellationTokenSource())
+            using(var cts = new CancellationTokenSource())
             {
-                await CreateWebHostBuilder(args, cts).Build().RunAsync(cts.Token);
+                var host = CreateWebHostBuilder(args, cts).Build();
+                // TODO: Use another thread so ASP does not use the JS thread context?
+                //await Task.Run(() => host.RunAsync(cts.Token), cts.Token);
+                await host.RunAsync(cts.Token);
             }
         }
 
